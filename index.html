@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>¿Cuántas palabras aprendimos sobre los Tundunchil?</title>
+
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin: 20px 0;
+      font-size: 28px;
+    }
+    #controls {
+      margin: 10px;
+    }
+    button {
+      background: #FFD700;
+      border: none;
+      padding: 10px 18px;
+      margin: 5px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #ffae00;
+      transform: scale(1.05);
+    }
+    #word-list {
+      margin: 15px auto;
+      padding: 10px;
+      width: 85%;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+    }
+    .word-item {
+      font-size: 18px;
+      padding: 5px 10px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+    .word-found {
+      text-decoration: line-through;
+      color: #28a745;
+      background: rgba(0,0,0,0.4);
+    }
+    .word-missed {
+      color: #dc3545;
+      font-weight: bold;
+    }
+    #grid {
+      display: grid;
+      margin: 20px auto;
+      gap: 3px;
+      justify-content: center;
+    }
+    .cell {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      color: black;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      transition: 0.2s;
+    }
+    .cell.selected {
+      background: #FFD700;
+      color: #000;
+      transform: scale(1.1);
+    }
+    .cell.correct {
+      background: #28a745;
+      color: #fff;
+    }
+    .cell.wrong {
+      background: #dc3545;
+      color: #fff;
+    }
+    #feedback {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    #stars {
+      margin-top: 10px;
+      font-size: 30px;
+      color: gold;
+    }
+  </style>
+
+  
+</head>
+<body>
+  <h1>¿Cuántas palabras aprendimos sobre los Tundunchil?</h1>
+  
+  <!-- Botones -->
+  <div id="controls">
+    <button onclick="initGame()">🎮 Iniciar Juego</button>
+    <button onclick="checkAnswers()">✅ Verificar</button>
+    <button onclick="initGame()">🔄 Volver a intentar</button>
+  </div>
+
+  <!-- Lista de palabras -->
+  <div id="word-list"></div>
+  
+  <!-- Grilla -->
+  <div id="grid"></div>
+  
+  <!-- Retroalimentación -->
+  <div id="feedback"></div>
+  <div id="stars"></div>
+
+  <script>
+    const words = ["MAMADANZA","DANZANTE","PINKULLU","BOMBO",
+                   "CASCABEL","CHUMPI","CUSHMA","INTI",
+                   "ALFANJE","SOMBRERO"];
+    const size = 14;
+    const gridElement = document.getElementById("grid");
+    const wordListElement = document.getElementById("word-list");
+    const feedbackElement = document.getElementById("feedback");
+    const starsElement = document.getElementById("stars");
+    let grid = [];
+    let foundWords = [];
+    let isDragging = false;
+    let selectedCells = [];
+    
+    function renderWordList() {
+      wordListElement.innerHTML = "";
+      words.forEach(word => {
+        const span = document.createElement("span");
+        span.textContent = word;
+        span.classList.add("word-item");
+        span.id = "word-" + word;
+        wordListElement.appendChild(span);
+      });
+    }
+    
+    function initGame() {
+      feedbackElement.innerHTML = "";
+      starsElement.innerHTML = "";
+      foundWords = [];
+      renderWordList();
+      createGrid();
+    }
+    
+    function createGrid() {
+      grid = Array.from({ length: size }, () =>
+        Array(size).fill("")
+      );
+      placeWords();
+      fillGrid();
+      renderGrid();
+    }
+    
+    function placeWords() {
+      words.forEach(word => {
+        let placed = false;
+        while (!placed) {
+          const dir = Math.random() > 0.5 ? "H" : "V";
+          const row = Math.floor(Math.random() * size);
+          const col = Math.floor(Math.random() * size);
+          if (canPlace(word, row, col, dir)) {
+            for (let i = 0; i < word.length; i++) {
+              if (dir === "H") grid[row][col + i] = word[i];
+              else grid[row + i][col] = word[i];
+            }
+            placed = true;
+          }
+        }
+      });
+    }
+    
+    function canPlace(word, row, col, dir) {
+      if (dir === "H" && col + word.length > size) return false;
+      if (dir === "V" && row + word.length > size) return false;
+      for (let i = 0; i < word.length; i++) {
+        if (dir === "H" && grid[row][col + i] !== "") return false;
+        if (dir === "V" && grid[row + i][col] !== "") return false;
+      }
+      return true;
+    }
+    
+    function fillGrid() {
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (grid[r][c] === "") {
+            grid[r][c] = letters[Math.floor(Math.random() * letters.length)];
+          }
+        }
+      }
+    }
+    
+    function renderGrid() {
+      gridElement.innerHTML = "";
+      gridElement.style.gridTemplateColumns = `repeat(${size}, 40px)`;
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          cell.textContent = grid[r][c];
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          cell.addEventListener("mousedown", startDrag);
+          cell.addEventListener("mouseenter", dragOver);
+          cell.addEventListener("mouseup", endDrag);
+          gridElement.appendChild(cell);
+        }
+      }
+      document.body.addEventListener("mouseup", endDrag);
+    }
+    
+    function startDrag(e) {
+      isDragging = true;
+      selectedCells = [];
+      selectCell(e.target);
+    }
+    
+    function dragOver(e) {
+      if (isDragging) {
+        selectCell(e.target);
+      }
+    }
+    
+    function endDrag() {
+      if (!isDragging) return;
+      isDragging = false;
+      checkWord();
+    }
+    
+    function selectCell(cell) {
+      if (!cell.classList.contains("selected")) {
+        cell.classList.add("selected");
+        selectedCells.push(cell);
+      }
+    }
+    
+    function checkWord() {
+      const letters = selectedCells.map(c => c.textContent).join("");
+      const reverse = selectedCells.map(c => c.textContent).reverse().join("");
+      
+      if (words.includes(letters) && !foundWords.includes(letters)) {
+        selectedCells.forEach(c => {
+          c.classList.remove("selected");
+          c.classList.add("correct");
+        });
+        document.getElementById("word-" + letters).classList.add("word-found");
+        foundWords.push(letters);
+      } else if (words.includes(reverse) && !foundWords.includes(reverse)) {
+        selectedCells.forEach(c => {
+          c.classList.remove("selected");
+          c.classList.add("correct");
+        });
+        document.getElementById("word-" + reverse).classList.add("word-found");
+        foundWords.push(reverse);
+      } else {
+        selectedCells.forEach(c => c.classList.remove("selected"));
+      }
+      selectedCells = [];
+    }
+    
+    function checkAnswers() {
+      let missed = words.filter(w => !foundWords.includes(w));
+      if (missed.length === 0) {
+        feedbackElement.textContent = "¡Excelente trabajo! 🎉";
+        starsElement.textContent = "⭐⭐⭐";
+      } else {
+        feedbackElement.textContent = "Te faltaron algunas palabras ❌";
+        starsElement.textContent = "⭐".repeat(3 - missed.length > 0 ? 3 - missed.length : 1);
+        missed.forEach(word => {
+          document.getElementById("word-" + word).classList.add("word-missed");
+        });
+      }
+    }
+    
+    initGame();
+  </script>
+</body>
+</html>
